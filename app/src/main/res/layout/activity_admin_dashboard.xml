@@ -48,7 +48,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Apps"
+                    android:text="Pending"
                     android:textSize="11sp"
                     android:textColor="@color/textGray"/>
             </LinearLayout>
@@ -314,4 +314,14 @@
             app:cornerRadius="16dp"/>
 
     </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnExportReport"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:text="Download CSV Report"
+        android:textColor="@color/primaryBlue"
+        android:layout_marginBottom="16dp" />
+
 </LinearLayout>

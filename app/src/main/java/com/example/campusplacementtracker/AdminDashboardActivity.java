@@ -9,12 +9,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 import java.util.ArrayList;
 
 public class AdminDashboardActivity extends AppCompatActivity {
 
     TextView tvTotalApps, tvSelectedApps, tvTotalUsers, tvTotalCompanies;
-    Button btnManageApplications, btnManageUsers, btnAddCompany, btnManageSlots, btnViewSlots, btnLogout, btnAdminCreateUser, btnAdminViewCompanies, btnCgpaRequests, btnChangePass;
+    Button btnManageApplications, btnManageUsers, btnAddCompany, btnManageSlots, btnViewSlots, btnLogout, btnAdminCreateUser, btnAdminViewCompanies, btnCgpaRequests, btnChangePass, btnExport;
     Database db;
 
     @Override
@@ -37,6 +38,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
         btnAdminCreateUser = findViewById(R.id.btnAdminCreateUser);
         btnAdminViewCompanies = findViewById(R.id.btnAdminViewCompanies);
         btnChangePass = findViewById(R.id.btnAdminChangePass);
+        btnExport = findViewById(R.id.btnExportReport);
         btnLogout = findViewById(R.id.btnAdminLogout);
 
         db = new Database(getApplicationContext());
@@ -52,6 +54,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
         btnViewSlots.setOnClickListener(v -> startActivity(new Intent(AdminDashboardActivity.this, ViewSlotsActivity.class)));
         btnCgpaRequests.setOnClickListener(v -> startActivity(new Intent(AdminDashboardActivity.this, AdminCgpaRequestsActivity.class)));
         btnChangePass.setOnClickListener(v -> startActivity(new Intent(AdminDashboardActivity.this, ChangePasswordActivity.class)));
+        btnExport.setOnClickListener(v -> exportData());
 
         btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,21 +78,46 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
     private void loadStats() {
         ArrayList<String> apps = db.getAllApplications();
-        int totalApps = apps.size();
+        int pendingCount = 0;
         int selectedCount = 0;
         for (String app : apps) {
-            if (app.contains("|Selected|")) {
+            String[] parts = app.split("\\|");
+            if (parts.length < 8) continue;
+            String status = parts[7];
+            if (status.contains("Selected")) {
                 selectedCount++;
+            } else if (status.contains("Applied") || status.contains("Round")) {
+                pendingCount++;
             }
         }
         
         int totalStudents = db.getAllUsers().size();
         int totalComps = db.getCompanies().size();
 
-        tvTotalApps.setText(String.valueOf(totalApps));
+        tvTotalApps.setText(String.valueOf(pendingCount));
         tvSelectedApps.setText(String.valueOf(selectedCount));
         tvTotalUsers.setText(String.valueOf(totalStudents));
         tvTotalCompanies.setText(String.valueOf(totalComps));
+    }
+
+    private void exportData() {
+        ArrayList<String> apps = db.getAllApplications();
+        StringBuilder csv = new StringBuilder("Company,Role,Package,Student,Status\n");
+        for (String app : apps) {
+            String[] p = app.split("\\|");
+            if (p.length < 10) continue;
+            csv.append(p[0]).append(",").append(p[1]).append(",").append(p[2]).append(",").append(p[9]).append(",").append(p[7]).append("\n");
+        }
+        
+        try {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/csv");
+            intent.putExtra(Intent.EXTRA_SUBJECT, "Placement Report");
+            intent.putExtra(Intent.EXTRA_TEXT, csv.toString());
+            startActivity(Intent.createChooser(intent, "Share Placement Report"));
+        } catch (Exception e) {
+            Toast.makeText(this, "Export failed", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

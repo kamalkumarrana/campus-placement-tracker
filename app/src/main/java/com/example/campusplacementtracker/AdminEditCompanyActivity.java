@@ -92,7 +92,7 @@ public class AdminEditCompanyActivity extends AppCompatActivity {
                 .setTitle("Confirm Update")
                 .setMessage("Save changes to " + originalName + "?")
                 .setPositiveButton("Save", (dialog, which) -> {
-                    db.updateCompany(originalName, name, role, pkg, eligibility, tech, minCgpa);
+                    db.updateCompany(originalName, name, role, pkg, eligibility, tech, minCgpa, "");
                     Toast.makeText(this, "Company updated", Toast.LENGTH_SHORT).show();
                     finish();
                 })

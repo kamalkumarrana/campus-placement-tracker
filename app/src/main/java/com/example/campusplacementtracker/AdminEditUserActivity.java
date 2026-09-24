@@ -91,7 +91,7 @@ public class AdminEditUserActivity extends AppCompatActivity {
                     .setTitle("Confirm Update")
                     .setMessage("Save changes to " + username + "'s profile?")
                     .setPositiveButton("Save", (dialog, which) -> {
-                        db.adminUpdateUser(username, fullname, rollno, branch, cgpa, status, tech);
+                        db.adminUpdateUser(username, fullname, rollno, branch, cgpa, status, tech, ""); // Added resume param
                         Toast.makeText(getApplicationContext(), "Student profile updated", Toast.LENGTH_SHORT).show();
                         finish();
                     })

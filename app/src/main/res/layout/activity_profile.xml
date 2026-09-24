@@ -152,6 +152,21 @@
                         android:textColor="@color/textDark"
                         android:layout_marginBottom="16dp" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Resume / CV"
+                        android:textSize="12sp"
+                        android:textColor="@color/textGray" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnViewResume"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="64dp"
+                        android:text="View Resume"
+                        android:textColor="@color/primaryBlue"
+                        android:layout_marginBottom="16dp" />
+
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnEnableEdit"
                         android:layout_width="match_parent"
@@ -234,6 +249,15 @@
                         android:padding="8dp"
                         android:clickable="true"
                         android:focusable="true" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnUploadResume"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="64dp"
+                        android:text="Upload Resume (PDF)"
+                        android:layout_marginBottom="16dp"
+                        app:cornerRadius="16dp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSaveProfile"

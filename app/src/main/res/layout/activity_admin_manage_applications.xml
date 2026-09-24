@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:hint="Search student or company..."
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="12dp"
         app:startIconDrawable="@android:drawable/ic_menu_search"
         app:boxBackgroundColor="@color/cardBackground"
         app:boxCornerRadiusTopStart="12dp"
@@ -37,6 +37,13 @@
             android:textColor="@color/textDark"
             android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
+
+    <Spinner
+        android:id="@+id/spinnerAdminStatusFilter"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginBottom="16dp"
+        android:background="@android:drawable/btn_dropdown" />
 
     <TextView
         android:id="@+id/tvAdminNoApps"

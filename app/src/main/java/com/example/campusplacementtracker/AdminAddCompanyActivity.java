@@ -1,19 +1,29 @@
 package com.example.campusplacementtracker;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 import java.util.ArrayList;
 
 public class AdminAddCompanyActivity extends AppCompatActivity {
 
     EditText edName, edRole, edPkg, edEligibility, edMinCgpa, edTechStack;
-    Button btnAdd, btnBack;
+    Button btnAdd, btnBack, btnPickLogo;
+    ImageView ivLogoPreview;
     Database db;
+    String logoUriStr = "";
+
+    private ActivityResultLauncher<String[]> logoPicker;
 
     String[] degrees = {"BCA", "MCA", "B.Tech", "M.Tech", "B.Sc", "M.Sc", "B.A", "M.A", "B.Com", "M.Com", "Diploma"};
     boolean[] selectedDegrees;
@@ -25,6 +35,19 @@ public class AdminAddCompanyActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_add_company);
 
+        logoPicker = registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+            if (uri != null) {
+                logoUriStr = uri.toString();
+                try {
+                    getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (SecurityException e) {
+                    // Handle non-persistable URIs
+                }
+                ivLogoPreview.setImageURI(uri);
+                ivLogoPreview.setVisibility(View.VISIBLE);
+            }
+        });
+
         edName = findViewById(R.id.edCompName);
         edRole = findViewById(R.id.edCompRole);
         edPkg = findViewById(R.id.edCompPkg);
@@ -33,6 +56,8 @@ public class AdminAddCompanyActivity extends AppCompatActivity {
         edEligibility = findViewById(R.id.edCompEligibility);
         btnAdd = findViewById(R.id.btnAddCompany);
         btnBack = findViewById(R.id.btnAddCompBack);
+        btnPickLogo = findViewById(R.id.btnPickLogo);
+        ivLogoPreview = findViewById(R.id.ivCompLogoPreview);
 
         selectedDegrees = new boolean[degrees.length];
         edEligibility.setOnClickListener(v -> showDegreeDialog());
@@ -69,7 +94,7 @@ public class AdminAddCompanyActivity extends AppCompatActivity {
                     .setTitle("Confirm Add")
                     .setMessage("Are you sure you want to add this company?")
                     .setPositiveButton("Yes", (dialog, which) -> {
-                        db.addCompany(name, role, pkg, eligibility, techStack, minCgpa);
+                        db.addCompany(name, role, pkg, eligibility, techStack, minCgpa, logoUriStr);
                         
                         // Automatically create a company user account
                         String hrUsername = name.toLowerCase().replace(" ", "_") + "_hr";
@@ -88,6 +113,7 @@ public class AdminAddCompanyActivity extends AppCompatActivity {
         });
 
         btnBack.setOnClickListener(v -> finish());
+        btnPickLogo.setOnClickListener(v -> logoPicker.launch(new String[]{"image/*"}));
     }
 
     private void showDegreeDialog() {

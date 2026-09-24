@@ -71,7 +71,7 @@ public class AdminCreateUserActivity extends AppCompatActivity {
                     .setMessage("Create student account for " + user + "?")
                     .setPositiveButton("Create", (dialog, which) -> {
                         db.registerUser(user, email, pass, "student");
-                        db.updateProfile(user, "", "", branch, "0", ""); // Initialize profile with selected branch
+                        db.updateProfile(user, "", "", branch, "0", "", ""); // Added resume param
                         Toast.makeText(getApplicationContext(), "Student account created successfully", Toast.LENGTH_SHORT).show();
                         finish();
                     })

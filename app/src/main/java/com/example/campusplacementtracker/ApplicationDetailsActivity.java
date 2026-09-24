@@ -16,10 +16,10 @@ public class ApplicationDetailsActivity extends AppCompatActivity {
     TextView tvCompany, tvRole, tvPackage, tvEligibility, tvApplied, tvInterview;
     TextView tvCandName, tvCandEmail, tvCandCgpa, tvCandTech;
     Spinner spinnerStatus;
-    Button btnUpdate, btnDelete, btnBack;
+    Button btnUpdate, btnDelete, btnBack, btnViewResume;
     View cardAdminActions, cardCandidateInfo;
 
-    String rowId, currentStatus, studentUsername;
+    String rowId, currentStatus, studentUsername, candidateResumeUri = "";
     Database db;
 
     String[] statusOptions = {"Applied", "Round 1", "Round 2", "Interview Scheduled", "Selected", "Rejected"};
@@ -42,6 +42,7 @@ public class ApplicationDetailsActivity extends AppCompatActivity {
         btnUpdate = findViewById(R.id.btnUpdateStatus);
         btnDelete = findViewById(R.id.btnDeleteApplication);
         btnBack = findViewById(R.id.btnDetailsBack);
+        btnViewResume = findViewById(R.id.btnAdminViewResume);
         cardAdminActions = findViewById(R.id.cardAdminActions);
         cardCandidateInfo = findViewById(R.id.cardCandidateInfo);
 
@@ -75,13 +76,29 @@ public class ApplicationDetailsActivity extends AppCompatActivity {
         // Load candidate profile if admin/HR
         if (isAdmin && studentUsername != null) {
             String[] profile = db.getProfile(studentUsername);
-            // [fullname, rollno, branch, cgpa, email, role, tech_stack]
+            // [fullname, rollno, branch, cgpa, email, role, tech_stack, resume_uri]
             cardCandidateInfo.setVisibility(View.VISIBLE);
             tvCandName.setText("Name: " + (profile[0].isEmpty() ? studentUsername : profile[0]));
             tvCandEmail.setText("Email: " + profile[4]);
             tvCandCgpa.setText("CGPA: " + profile[3]);
             tvCandTech.setText("Skills: " + (profile[6].isEmpty() ? "Not Set" : profile[6]));
+            
+            candidateResumeUri = profile[7];
+            if (candidateResumeUri != null && !candidateResumeUri.isEmpty()) {
+                btnViewResume.setVisibility(View.VISIBLE);
+            }
         }
+
+        btnViewResume.setOnClickListener(v -> {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(android.net.Uri.parse(candidateResumeUri), "application/pdf");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(this, "Cannot open resume", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, statusOptions);
         spinnerStatus.setAdapter(adapter);

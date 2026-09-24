@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,6 +18,10 @@ public class MainActivity extends AppCompatActivity {
     EditText edUsername, edPassword;
     Button btnLogin, btnThemeToggle;
     TextView tvGoRegister;
+    Spinner spinnerRole;
+    Database db;
+
+    String[] roles = {"Student", "Admin", "Company HR"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,8 +34,12 @@ public class MainActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btnLogin);
         tvGoRegister = findViewById(R.id.tvGoRegister);
         btnThemeToggle = findViewById(R.id.btnThemeToggle);
+        spinnerRole = findViewById(R.id.spinnerLoginRole);
 
-        Database db = new Database(getApplicationContext());
+        ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, roles);
+        spinnerRole.setAdapter(roleAdapter);
+
+        db = new Database(getApplicationContext());
 
         updateToggleButtonText();
 
@@ -42,8 +52,17 @@ public class MainActivity extends AppCompatActivity {
                 if (username.isEmpty() || password.isEmpty()) {
                     Toast.makeText(getApplicationContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
                 } else {
+                    String selectedRole = spinnerRole.getSelectedItem().toString().toLowerCase();
+                    if (selectedRole.contains("hr")) selectedRole = "company";
+                    
                     String role = db.login(username, password);
+                    
                     if (!role.isEmpty()) {
+                        if (!role.equals(selectedRole)) {
+                            Toast.makeText(getApplicationContext(), "Incorrect role for this account", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
                         SharedPreferences sp = getSharedPreferences("shared_prefs", Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = sp.edit();
                         editor.putString("username", username);

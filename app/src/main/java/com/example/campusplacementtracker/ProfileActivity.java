@@ -7,6 +7,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,10 +31,12 @@ public class ProfileActivity extends AppCompatActivity {
     TextView tvWelcome, tvDispFullName, tvDispEmail, tvDispRollNo, tvDispBranch, tvDispCgpa, tvCgpaReqStatus, tvRequestCgpaPopup, tvDispTechStack;
     EditText edFullName, edRollNo, edTechStack;
     Spinner spinnerBranch;
-    Button btnSaveProfile, btnGoCompanies, btnGoApplications, btnLogout, btnThemeToggle, btnEnableEdit, btnCancelEdit, btnChangePass;
+    Button btnSaveProfile, btnGoCompanies, btnGoApplications, btnLogout, btnThemeToggle, btnEnableEdit, btnCancelEdit, btnChangePass, btnUploadResume, btnViewResume;
     LinearLayout layoutView, layoutEdit;
-    String username;
+    String username, resumeUriStr = "";
     Database db;
+
+    private ActivityResultLauncher<String[]> resumePicker;
 
     String[] degrees = {"BCA", "MCA", "B.Tech", "M.Tech", "B.Sc", "M.Sc", "B.A", "M.A", "B.Com", "M.Com", "Diploma"};
 
@@ -33,7 +46,20 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        resumePicker = registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+            if (uri != null) {
+                resumeUriStr = uri.toString();
+                try {
+                    getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (SecurityException e) {
+                    // Handle non-persistable URIs or permission issues
+                }
+                Toast.makeText(this, "Resume selected", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         tvWelcome = findViewById(R.id.tvWelcome);
+        // ...
         tvDispFullName = findViewById(R.id.tvDispFullName);
         tvDispEmail = findViewById(R.id.tvDispEmail);
         tvDispRollNo = findViewById(R.id.tvDispRollNo);
@@ -62,6 +88,8 @@ public class ProfileActivity extends AppCompatActivity {
         btnChangePass = findViewById(R.id.btnStudentChangePass);
         btnLogout = findViewById(R.id.btnLogout);
         btnThemeToggle = findViewById(R.id.btnThemeToggle);
+        btnUploadResume = findViewById(R.id.btnUploadResume);
+        btnViewResume = findViewById(R.id.btnViewResume);
 
         SharedPreferences sp = getSharedPreferences("shared_prefs", Context.MODE_PRIVATE);
         username = sp.getString("username", "");
@@ -80,6 +108,23 @@ public class ProfileActivity extends AppCompatActivity {
         btnCancelEdit.setOnClickListener(v -> {
             layoutEdit.setVisibility(View.GONE);
             layoutView.setVisibility(View.VISIBLE);
+        });
+
+        btnUploadResume.setOnClickListener(v -> resumePicker.launch(new String[]{"application/pdf"}));
+
+        btnViewResume.setOnClickListener(v -> {
+            if (resumeUriStr.isEmpty()) {
+                Toast.makeText(this, "No resume uploaded", Toast.LENGTH_SHORT).show();
+            } else {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.parse(resumeUriStr), "application/pdf");
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Toast.makeText(this, "Cannot open resume", Toast.LENGTH_SHORT).show();
+                }
+            }
         });
 
         tvDispCgpa.setOnClickListener(v -> showCgpaRequestDialog());
@@ -102,7 +147,7 @@ public class ProfileActivity extends AppCompatActivity {
                 .setTitle("Save Changes")
                 .setMessage("Are you sure you want to update your profile?")
                 .setPositiveButton("Save", (dialog, which) -> {
-                    db.updateProfile(username, fullname, rollno, branch, tvDispCgpa.getText().toString(), tech);
+                    db.updateProfile(username, fullname, rollno, branch, tvDispCgpa.getText().toString(), tech, resumeUriStr);
                     Toast.makeText(getApplicationContext(), "Profile updated", Toast.LENGTH_SHORT).show();
                     loadProfile();
                     layoutEdit.setVisibility(View.GONE);
@@ -137,7 +182,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void loadProfile() {
         String[] profile = db.getProfile(username);
-        // [fullname, rollno, branch, cgpa, email, role, tech_stack]
+        // [fullname, rollno, branch, cgpa, email, role, tech_stack, resume_uri]
         String branchVal = profile[2];
         tvDispFullName.setText(profile[0].isEmpty() ? "Not Set" : profile[0]);
         tvDispRollNo.setText(profile[1].isEmpty() ? "Not Set" : profile[1]);
@@ -145,9 +190,16 @@ public class ProfileActivity extends AppCompatActivity {
         tvDispCgpa.setText(profile[3]);
         tvDispEmail.setText(profile[4]);
         tvDispTechStack.setText(profile[6].isEmpty() ? "Not Set" : profile[6]);
+        resumeUriStr = profile[7];
+        
+        if (resumeUriStr.isEmpty()) {
+            btnViewResume.setVisibility(View.GONE);
+        } else {
+            btnViewResume.setVisibility(View.VISIBLE);
+        }
 
         String reqStatus = db.getLatestCgpaRequestStatus(username);
-        if (!reqStatus.isEmpty()) {
+        if (reqStatus != null && !reqStatus.isEmpty()) {
             tvCgpaReqStatus.setText("Latest Request: " + reqStatus);
         } else {
             tvCgpaReqStatus.setText("No pending requests");
